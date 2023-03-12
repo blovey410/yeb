@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force --mode dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prod": "vite --mode prod"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.0.10",
+    "axios": "^1.2.2",
     "element-plus": "^2.2.28",
     "vue": "^3.2.45",
     "vue-router": "^4.1.6"
