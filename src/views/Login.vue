@@ -3,8 +3,7 @@
     :model="loginParam"
     :rules="rules"
     ref="ruleRef"
-    class="loginContainer"
-  >
+    class="loginContainer">
     <el-form-item>
       <h3 class="loginTitle">系统登录</h3>
     </el-form-item>
@@ -12,87 +11,88 @@
       <el-input
         type="text"
         v-model="loginParam.username"
-        placeholder="请输入用户名"
-      ></el-input>
+        placeholder="请输入用户名"></el-input>
     </el-form-item>
     <el-form-item prop="password">
       <el-input
         type="password"
         v-model="loginParam.password"
-        placeholder="请输入密码"
-      ></el-input>
+        placeholder="请输入密码"></el-input>
     </el-form-item>
     <el-form-item prop="code">
       <el-input
         type="text"
         v-model="loginParam.code"
         placeholder="点击图片，更换验证码"
-        style="width: 250px; margin-right: 5px"
-      ></el-input>
-      <img :src="loginParam.captchUrl"  @click="flushImg"/>
+        style="width: 220px; margin-right: 5px"></el-input>
+      <img :src="captchUrl" @click="flushImg" style="cursor: pointer" />
     </el-form-item>
     <el-form-item>
-      <el-checkbox label="记住我" v-model="checked" />
+      <el-checkbox label="记住我" v-model="loginParam.remeberMe" />
     </el-form-item>
-
     <el-form-item>
-      <el-button type="primary" @click="login">登录</el-button>
+      <el-button type="primary" @click="loginReq">登录</el-button>
       <el-button type="primary" @click="register">注册</el-button>
     </el-form-item>
   </el-form>
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
-import { ElMessage } from "element-plus";
-import {loadCode, login} from "../api/login"
-import { router } from "vue-router";
+import { onMounted, reactive, ref } from 'vue';
+import { ElMessage } from 'element-plus';
+import { login } from '../api/login';
+import { useRouter } from 'vue-router';
+import { useStore } from '../store/index';
+const router = useRouter();
+const store = useStore();
 const loginParam = reactive({
-  username: "",
-  password: "",
-  code: "",
-  captchUrl: "",
+  username: '',
+  password: '',
+  code: '',
+  remeberMe: false,
 });
-const checked = false;
 const rules = reactive({
-  username: [{ required: true, message: "用户名不能为空", trigger: "blur" }],
+  username: [{ required: true, message: '用户名不能为空', trigger: 'blur' }],
   password: [
-    { required: true, message: "密码不能为空", trigger: "blur" },
-    { min: 8, max: 16, message: "密码长度要在8-16位之间", trigger: "blur" },
+    { required: true, message: '密码不能为空', trigger: 'blur' },
+    { min: 8, max: 16, message: '密码长度要在8-16位之间', trigger: 'blur' },
   ],
-  code: [{ required: true, message: "验证码不能为空", trigger: "blur" }],
+  code: [{ required: true, message: '验证码不能为空', trigger: 'blur' }],
 });
 const ruleRef = ref();
-const login = () => {
+const loginReq = () => {
   if (!ruleRef) return;
-  ruleRef.value.validate((valid) => {
+  ruleRef.value.validate(async valid => {
     if (valid) {
-      login(loginParam, "post").then(resp => {
-        router.push("/index");
-      }, error =>{
-        console.log(error);
-      })
-      ElMessage({
-        message: "登录成功",
-        type: "success",
-      });
+      const resp = await login(loginParam, 'post');
+      if (resp.respEnum.code === 200) {
+        ElMessage({
+          message: '登录成功',
+          type: 'success',
+        });
+        store.addTokenHeader(resp.obj.tokenHeader);
+        store.addAuthorization(resp.obj.token);
+        localStorage.setItem(resp.obj.tokenHeader, resp.obj.token);
+        router.push('/index');
+      }
     } else {
       ElMessage({
-        message: "请输入所有字段",
-        type: "warning",
+        message: '请输入所有字段',
+        type: 'warning',
       });
       return false;
     }
   });
 };
 const register = () => {};
-const flushImg = () => {
-  loadCode('get').then(res => {
-    loginParam.captchUrl = res.data
-  }).catch(error => {
-    console.log(error);
-  })
-}
+const BASE_URL = import.meta.env.VITE_BASE_API_URL + '/captcha?time=';
+const captchUrl = ref('');
+const flushImg = async () => {
+  captchUrl.value = BASE_URL + new Date().getTime();
+};
+onMounted(() => {
+  flushImg();
+});
 </script>
 
 <style scoped>

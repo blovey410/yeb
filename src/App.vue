@@ -1,11 +1,9 @@
 <script setup>
-import { RouterLink, RouterView } from "vue-router";
-console.log(import.meta.env.VITE_BASE_API_URL);
+import { RouterView } from 'vue-router';
 </script>
 
 <template>
   <RouterView />
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>
